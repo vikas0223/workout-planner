@@ -21,12 +21,15 @@ function DashboardContent() {
   const { isOfflineMode } = useWorkoutCompletion()
 
   useEffect(() => {
+    console.log('[v0] Dashboard mounted. Current user:', currentUser)
     if (!currentUser) {
+      console.log('[v0] No current user, redirecting to home')
       router.push('/')
       return
     }
     
     const savedUserProfile = localStorage.getItem('userProfile')
+    console.log('[v0] Dashboard loaded with user:', currentUser.name, 'Profile exists:', !!savedUserProfile)
     if (savedUserProfile) {
       setUserProfile(JSON.parse(savedUserProfile))
     }
@@ -38,7 +41,7 @@ function DashboardContent() {
     router.push('/')
   }
 
-  if (isLoading) {
+  if (isLoading || !currentUser) {
     return (
       <div className="bg-gradient-to-br from-indigo-200 via-purple-200 to-indigo-300 min-h-screen flex items-center justify-center">
         <motion.div

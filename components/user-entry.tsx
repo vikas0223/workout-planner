@@ -18,6 +18,7 @@ export default function UserEntry() {
   const [suggestions, setSuggestions] = useState<ExistingUser[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const { setCurrentUser } = useUser()
   const router = useRouter()
 
@@ -45,9 +46,11 @@ export default function UserEntry() {
   }, [inputValue, fetchSuggestions])
 
   const handleSelectUser = async (user: ExistingUser) => {
+    console.log('[v0] User selected:', user.name)
     setCurrentUser(user)
     setInputValue('')
     setSuggestions([])
+    setShowSuggestions(false)
     router.push('/dashboard')
   }
 
@@ -55,6 +58,7 @@ export default function UserEntry() {
     e.preventDefault()
     if (!inputValue.trim()) return
 
+    setError('')
     setIsLoading(true)
     try {
       const res = await fetch('/api/users/create', {
@@ -64,13 +68,18 @@ export default function UserEntry() {
       })
       const data = await res.json()
       if (data.user) {
+        console.log('[v0] User created/found:', data.user)
         setCurrentUser(data.user)
         setInputValue('')
         setSuggestions([])
         router.push('/dashboard')
+      } else if (data.error) {
+        setError(data.error)
+        console.error('[v0] API error:', data.error)
       }
     } catch (error) {
-      console.error('Error creating user:', error)
+      console.error('[v0] Error creating user:', error)
+      setError('Connection error. Using local mode.')
     } finally {
       setIsLoading(false)
     }
@@ -105,7 +114,7 @@ export default function UserEntry() {
             </motion.p>
           </motion.div>
 
-          <form onSubmit={handleCreateUser} className="space-y-4">
+          <form onSubmit={handleCreateUser} className="space-y-4" onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}>
             <div className="relative">
               <motion.div
                 initial={{ scale: 0.95 }}
@@ -119,9 +128,11 @@ export default function UserEntry() {
                   onChange={(e) => {
                     setInputValue(e.target.value)
                     setShowSuggestions(true)
+                    setError('')
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   className="text-lg py-6 px-4 bg-white/80 border-indigo-300 focus:border-indigo-500 focus:scale-105 placeholder:text-indigo-400 transition-transform"
+                  autoComplete="off"
                 />
               </motion.div>
 
@@ -168,6 +179,16 @@ export default function UserEntry() {
               )}
             </motion.button>
           </form>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700"
+            >
+              {error}
+            </motion.div>
+          )}
 
           <motion.p
             variants={staggerItem}
