@@ -44,13 +44,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser])
 
-  if (!isHydrated) {
-    return <>{children}</>
-  }
-
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>
-      {children}
+      {isHydrated ? children : <div />}
     </UserContext.Provider>
   )
 }
